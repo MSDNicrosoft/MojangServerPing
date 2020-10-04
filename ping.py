@@ -12,6 +12,10 @@ import tkinter.messagebox
 import tkinter.filedialog
 import json
 import _thread
+import ctypes
+import re
+import pyperclip
+
 def chesksum(data):
     """
     校验
@@ -109,8 +113,16 @@ def ping(host,self):
     self.write_log_to_Text("IP 为 "+host+" 检测完成")
     return l
 
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
 LOG_LINE_NUM = 0
 def ping_xc(self):
+    self.result_data_Text.delete(1.0,2.0)
+    self.init_data_Text.delete(1.0,2.0)
     self.write_log_to_Text("开始检测")
     ping_list = []
     for a1 in self.ip.get('auth',{}):
@@ -124,7 +136,7 @@ def ping_xc(self):
     print(ping_list)
     for a1 in ping_list:
         print(a1['url'],a1['ms'])
-        self.init_data_Text.insert(tkinter.END, ' IP: '+a1['url'] + '\n'+' 延迟(ms): ' + str(a1['ms']) + '\n'+'\n')
+        self.init_data_Text.insert(tkinter.END, ' IP: '+a1['url'] + '\n'+' 延迟(ms): ' + str(a1['ms']) + '\n\n')
     print("d")
     ping_lists = []
     for s1 in self.ip.get('session',{}):
@@ -134,12 +146,31 @@ def ping_xc(self):
         else:
             self.write_log_to_Text("Ping "+s1+"失败")
     ping_lists = sorted(ping_lists, key = lambda i: i['ms'])
-    print(ping_list)
     for s1 in ping_lists:
-        print(s1['url'],s1['ms'])
-        self.result_data_Text.insert(tkinter.END, ' IP: '+s1['url'] + '\n'+' 延迟(ms): ' + str(s1['ms']) + '\n'+'\n')
+        self.result_data_Text.insert(tkinter.END, ' IP: '+s1['url'] + '\n'+' 延迟(ms): ' + str(s1['ms']) + '\n\n')
+    print(ping_list,ping_lists)
     tkinter.messagebox.showinfo("检测已完成",'所有 IP 已检测完成!\n最优验证服务器 (Auth Server) IP: ' + ping_list[0]['url'] + ' 延迟(ms): ' + str(ping_list[0]['ms'])+'\n最优会话服务器 (Session Server) IP:' + ping_lists[0]['url'] + ' 延迟(ms): ' + str(ping_lists[0]['ms']))
-    tkinter.messagebox.showinfo("添加 HOSTS",'请打开 C:\Windows\System32\drivers\etc 目录下的 hosts 文件\n将如下内容在 hosts 文件最后两行添加：\n'+ ping_list[0]['url'] + ' authserver.mojang.com\n' + ping_lists[0]['url'] + ' sessionserver.mojang.com\n'+'\n请务必保存!!!')
+    if tkinter.messagebox.askyesno('提示', '是否要写到Hosts'):
+        if is_admin():
+            f = open("C:\\Windows\\System32\\drivers\\etc\\hosts",'r')
+            hosts = f.read()
+            f.close()
+            hosts = re.sub(r'\s.*authserver\.mojang\.com','',hosts)
+            hosts = re.sub(r'\s.*sessionserver\.mojang\.com','',hosts)
+            try:
+                f = open("C:\\Windows\\System32\\drivers\\etc\\hosts",'w')
+                hosts += '\n' + ping_list[0]['url'] + ' authserver.mojang.com\n' + ping_lists[0]['url'] + ' sessionserver.mojang.com\n'
+                f.write(hosts)
+                f.close()
+            except Exception as e:
+                tkinter.messagebox.showinfo("提示",'权限不足!\n请手动写入\n文本已放剪切板\n' + str(e))
+                pyperclip.copy('\n' + ping_list[0]['url'] + ' authserver.mojang.com\n' + ping_lists[0]['url'] + ' sessionserver.mojang.com\n')
+                ctypes.windll.shell32.ShellExecuteW(None, "runas", 'notepad', 'C:\\Windows\\System32\\drivers\\etc\\hosts', None, 1)
+        else:
+            tkinter.messagebox.showinfo("提示",'替换hosts需要uac权限，需要重ping!')
+            ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
+            sys.exit()
+    # tkinter.messagebox.showinfo("添加 HOSTS",'请打开 C:\Windows\System32\drivers\etc 目录下的 hosts 文件\n将如下内容在 hosts 文件最后两行添加：\n'+ ping_list[0]['url'] + ' authserver.mojang.com\n' + ping_lists[0]['url'] + ' sessionserver.mojang.com\n'+'\n请务必保存!!!')
     self.start_button.configure(state='normal')
 
 class MY_GUI():
