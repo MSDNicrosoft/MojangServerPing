@@ -150,7 +150,7 @@ def ping_xc(self):
         self.result_data_Text.insert(tkinter.END, ' IP: '+s1['url'] + '\n'+' 延迟(ms): ' + str(s1['ms']) + '\n\n')
     print(ping_list,ping_lists)
     tkinter.messagebox.showinfo("检测已完成",'所有 IP 已检测完成!\n最优验证服务器 (Auth Server) IP: ' + ping_list[0]['url'] + ' 延迟(ms): ' + str(ping_list[0]['ms'])+'\n最优会话服务器 (Session Server) IP:' + ping_lists[0]['url'] + ' 延迟(ms): ' + str(ping_lists[0]['ms']))
-    if tkinter.messagebox.askyesno('提示', '是否要写到Hosts'):
+    if tkinter.messagebox.askyesno('提示', '是否要写到 hosts'):
         if is_admin():
             f = open("C:\\Windows\\System32\\drivers\\etc\\hosts",'r')
             hosts = f.read()
@@ -167,9 +167,9 @@ def ping_xc(self):
                 pyperclip.copy('\n' + ping_list[0]['url'] + ' authserver.mojang.com\n' + ping_lists[0]['url'] + ' sessionserver.mojang.com\n')
                 ctypes.windll.shell32.ShellExecuteW(None, "runas", 'notepad', 'C:\\Windows\\System32\\drivers\\etc\\hosts', None, 1)
         else:
-            tkinter.messagebox.showinfo("提示",'替换hosts需要uac权限，需要重ping!')
+            tkinter.messagebox.showinfo("提示",'替换 hosts 需要 UAC(用户账户控制) 权限，需要重新检测!')
             ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, __file__, None, 1)
-            sys.exit()
+            exit()
     # tkinter.messagebox.showinfo("添加 HOSTS",'请打开 C:\Windows\System32\drivers\etc 目录下的 hosts 文件\n将如下内容在 hosts 文件最后两行添加：\n'+ ping_list[0]['url'] + ' authserver.mojang.com\n' + ping_lists[0]['url'] + ' sessionserver.mojang.com\n'+'\n请务必保存!!!')
     self.start_button.configure(state='normal')
 
@@ -208,7 +208,7 @@ class MY_GUI():
                 tkinter.messagebox.showinfo("提示",'已取消')
                 sys.exit()
         elif os.path.exists(sys.argv[1]) and not os.path.isfile(sys.argv[1]):
-            tkinter.messagebox.showinfo("提示：",'打开的文件不能为文件夹或文件不存在')
+            tkinter.messagebox.showinfo("提示",'打开的文件不能为文件夹或文件不存在')
             sys.exit()
         else:
             file = sys.argv[1]
